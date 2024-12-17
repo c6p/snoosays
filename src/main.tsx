@@ -32,11 +32,6 @@ Devvit.addMenuItem({
   },
 });
 
-/*type User = { id: string, name: string }
-const hasMemory = (says: any): says is { userId, userName: , memory: string } => {
-  return says && typeof says.user === 'object' && typeof says.memory === 'string'
-}*/
-
 type Score = { member: string, score: number }
 
 type Message = {
@@ -51,13 +46,12 @@ Devvit.addCustomPostType({
   render: ({ reddit, redis, realtime, postId, userId }) => {
     const [started, setStarted] = useState<boolean>(false)
     if (!postId) return <text>Error: Missing post id</text>;
-    //console.log(postId, userId)
+
     const { data, loading, error } = useAsync(async () => await Promise.all([
       (async () => {
         if (!userId) return "" // throw new Error('Missing user id')
         const user = await reddit.getUserById(userId)
         if (!user) throw new Error('User not found')
-        //console.log(user.username)
         return user.username
       })(),
       (async () => {
@@ -65,7 +59,6 @@ Devvit.addCustomPostType({
         if (value && value.length > 0) {
           return value.split('').map(Number)
         } else {
-          //if (!postId) throw new Error('Missing post id')
           // generate random sequence of t3_ length 4 in base4 from postId
           const memory = [...postId.slice(-4)].map(c => Number(c.charCodeAt(0).toString(4).slice(-1)))
           redis.set(`memory:${postId}`, memory.join(''))
@@ -74,9 +67,6 @@ Devvit.addCustomPostType({
       })(),
       (async () => {
         const leaders = await redis.zRange(`leaderboard:${postId}`, 0, 0, { by: "rank", reverse: true })
-        //console.log(leaders)
-        //console.log(await redis.zScan(`leaderboard:${postId}`, 0))
-        //const { member, score } = leaders?.[0] ?? { member: 'Snoo', score: 0 }
         const { member = 'Snoo', score = 0 } = leaders?.[0] ?? {};
         // Maybe: check score matches memory length
         return member
@@ -96,10 +86,6 @@ Devvit.addCustomPostType({
       { color: "Red-600", highlight: "Red-300" },
       { color: "Yellow-600", highlight: "Yellow-300" },
       { color: "AlienBlue-600", highlight: "AlienBlue-300" }
-      //{ color: "success-background", highlight: "success-plain" },
-      //{ color: "danger-background", highlight: "danger-plain" },
-      //{ color: "caution-background", highlight: "caution-plain" },
-      //{ color: "primary-background", highlight: "primary-plain" }
     ]
     const [highlights, setHighlights] = useState<[boolean, boolean, boolean, boolean]>([false, false, false, false])
     const [index, setIndex] = useState<number>(-1)
@@ -155,7 +141,6 @@ Devvit.addCustomPostType({
         const m = memory[index]
         highlight(m)
         if (index + 1 >= gameLen) {
-          //playback.stop()
           setIndex(memory.length)
           setGame(true)
         } else {
@@ -178,10 +163,8 @@ Devvit.addCustomPostType({
       if (!game) return
       highlight(color)
       const len = touches.length
-      if (len > memory.length - 1) {
-        //setTouches([])
+      if (len + 1 > memory.length) {
         addMemory(color)
-        //reset(-1)
       } else if (color === memory[len]) {
         if (len + 1 === gameLen) {
           setTouches([])
