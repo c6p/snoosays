@@ -53,7 +53,7 @@ Devvit.addCustomPostType({
     //console.log(postId, userId)
     const { data, loading, error } = useAsync(async () => await Promise.all([
       (async () => {
-        if (!userId) throw new Error('Missing user id')
+        if (!userId) return "" // throw new Error('Missing user id')
         const user = await reddit.getUserById(userId)
         if (!user) throw new Error('User not found')
         //console.log(user.username)
