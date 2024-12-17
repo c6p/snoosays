@@ -17,6 +17,39 @@ Devvit.addTrigger({
   }
 });
 
+// Add a scheduler job to post a daily game
+Devvit.addSchedulerJob({
+  name: 'daily_game',
+  onRun: async (_, context) => {
+    console.log('daily_game handler called');
+    const subreddit = await context.reddit.getCurrentSubreddit();
+    const today = new Date().toISOString().slice(0, 10);
+    const resp = await context.reddit.submitPost({
+      subredditName: subreddit.name,
+      title: `Snoo says ${today}`,
+      text: 'Every day a new game starts. Play and compete to be the best!',
+    });
+    console.log('posted resp', JSON.stringify(resp));
+  },
+});
+
+Devvit.addTrigger({
+  event: 'AppInstall',
+  onEvent: async (_, context) => {
+    try {
+      const jobId = await context.scheduler.runJob({
+        cron: '0 0 * * *',
+        name: 'daily_game',
+        data: {},
+      });
+      await context.redis.set('jobId', jobId);
+    } catch (e) {
+      console.log('error was not able to schedule:', e);
+      throw e;
+    }
+  },
+});
+
 // Add a menu item to the subreddit menu for instantiating the new experience post
 Devvit.addMenuItem({
   label: 'Add Snoo Says Post',
