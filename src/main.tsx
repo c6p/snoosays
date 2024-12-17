@@ -293,7 +293,7 @@ Devvit.addCustomPostType({
               <LeaderBtn />
             </hstack>
           </vstack>
-          {started || <vstack height="100%" width="100%" alignment="middle center">
+          {started || <vstack height="100%" alignment="middle center" padding="small">
             <vstack backgroundColor="neutral-background-strong" cornerRadius="small" padding="small" gap="small"><text size="large">Mimic the Color Pattern !</text>
               <button onPress={() => {
                 setStarted(true)
