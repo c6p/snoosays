@@ -66,7 +66,7 @@ Devvit.addCustomPostType({
         } else {
           //if (!postId) throw new Error('Missing post id')
           // generate random sequence of t3_ length 4 in base4 from postId
-          const memory = [...postId.slice(3, 7)].map(c => Number(c.charCodeAt(0).toString(4).slice(-1)))
+          const memory = [...postId.slice(-4)].map(c => Number(c.charCodeAt(0).toString(4).slice(-1)))
           redis.set(`memory:${postId}`, memory.join(''))
           return memory;
         }
