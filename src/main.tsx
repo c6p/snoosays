@@ -48,7 +48,8 @@ type Message = {
 // Add a post type definition
 Devvit.addCustomPostType({
   name: 'Snoo Says',
-  render: ({ reddit, redis, postId, userId }) => {
+  render: ({ reddit, redis, realtime, postId, userId }) => {
+    const [started, setStarted] = useState<boolean>(false)
     if (!postId) return <text>Error: Missing post id</text>;
     //console.log(postId, userId)
     const { data, loading, error } = useAsync(async () => await Promise.all([
@@ -105,7 +106,7 @@ Devvit.addCustomPostType({
     const [touches, setTouches] = useState<number[]>([])
     const [gameLen, setGameLen] = useState<number>(1)
     const [light, setLight] = useState<boolean>(false)
-    const [game, setGame] = useState<boolean>(false)
+    const [game, setGame] = useState<boolean>(true)
     const BG = "neutral-background"
     const [bg, setBg] = useState<string>(BG)
     const [tab, setTab] = useState<number>(0)
@@ -237,31 +238,45 @@ Devvit.addCustomPostType({
 
     const Game = () => {
       return (
-        <vstack height="100%" gap="medium">
-          <spacer size="xsmall" />
-          <hstack>
-            {touches.length === memory.length
-              ? (<text>Select COLOR to LEAD</text>)
-              : (<>
-                <text>{leader} Says</text>
-                <spacer grow />
-                <text>{game ? `${touches.length} / ${memory.length}` : 'WATCH'}</text>
-              </>)}
-          </hstack>
-          <hstack height="96px" width="100%" gap="medium">
-            <Plate index={0} />
-            <Plate index={1} />
-          </hstack>
-          <hstack height="96px" width="100%" gap="medium">
-            <Plate index={2} />
-            <Plate index={3} />
-          </hstack>
-          <hstack>
-            <button icon="refresh" size="small" onPress={() => reset()}>Review</button>
-            <spacer grow />
-            <LeaderBtn />
-          </hstack>
-        </vstack>
+        <zstack>
+          <vstack height="100%" gap="medium">
+            <spacer size="xsmall" />
+            <hstack>
+              {touches.length === memory.length
+                ? (<text>Select COLOR to LEAD</text>)
+                : (<>
+                  <text>{leader} Says</text>
+                  <spacer grow />
+                  <text>{game ? `${touches.length} / ${memory.length}` : 'WATCH'}</text>
+                </>)}
+            </hstack>
+            <hstack height="96px" width="100%" gap="medium">
+              <Plate index={0} />
+              <Plate index={1} />
+            </hstack>
+            <hstack height="96px" width="100%" gap="medium">
+              <Plate index={2} />
+              <Plate index={3} />
+            </hstack>
+            <hstack>
+              <button icon="refresh" size="small" onPress={() => {
+                setTouches([])
+                reset()
+              }}>Review</button>
+              <spacer grow />
+              <LeaderBtn />
+            </hstack>
+          </vstack>
+          {started || <vstack height="100%" width="100%" alignment="middle center">
+            <vstack backgroundColor="neutral-background-strong" cornerRadius="small" padding="small" gap="small"><text size="large">Mimic the Color Pattern !</text>
+              <button onPress={() => {
+                setStarted(true)
+                reset(-1)
+                playback.start()
+              }}>Start</button>
+            </vstack>
+          </vstack>}
+        </zstack>
       )
     }
 
@@ -283,8 +298,7 @@ Devvit.addCustomPostType({
       } else {
         playbackMemory()
       }
-    }, 300)
-    playback.start()
+    }, 250)
 
     return (
       <hstack height="100%" backgroundColor={bg}>
