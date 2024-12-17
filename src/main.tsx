@@ -7,6 +7,16 @@ Devvit.configure({
   redditAPI: true,
 });
 
+// Add a trigger to clear the memory and leaderboard when a post is deleted
+Devvit.addTrigger({
+  event: 'PostDelete',
+  onEvent: async ({ postId }, { redis }) => {
+    await redis.del(`memory:${postId}`);
+    await redis.del(`leaderboard:${postId}`);
+    console.log('Deleted memory and leaderboard for post', postId);
+  }
+});
+
 // Add a menu item to the subreddit menu for instantiating the new experience post
 Devvit.addMenuItem({
   label: 'Add my post',
