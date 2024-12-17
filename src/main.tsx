@@ -19,7 +19,7 @@ Devvit.addTrigger({
 
 // Add a menu item to the subreddit menu for instantiating the new experience post
 Devvit.addMenuItem({
-  label: 'Add my post',
+  label: 'Add Snoo Says Post',
   location: 'subreddit',
   forUserType: 'moderator',
   onPress: async (_event, context) => {
