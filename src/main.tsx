@@ -41,7 +41,7 @@ type Score = { member: string, score: number }
 
 type Message = {
   postId: string;
-  color: number;
+  memory: number[];
   leader: string;
 };
 
@@ -114,18 +114,17 @@ Devvit.addCustomPostType({
       name: 'events',
       onMessage: (msg) => {
         console.log(msg, userName, postId, memory)
-        if (msg.leader === userName || msg.postId !== postId) {
-          //Ignore my updates b/c they have already been rendered
+        if (msg.postId !== postId) {
           return;
         }
-        const oldLeader = leader
-        setLeader(msg.leader)
-        setMemory([...memory, msg.color])
-        if (oldLeader === userName) {
+        // if old leader
+        if (leader === userName) {
           setTouches([])
           setGameLen(1)
           reset(-1)
         }
+        setLeader(msg.leader)
+        setMemory(msg.memory)
       },
     });
 
@@ -166,26 +165,12 @@ Devvit.addCustomPostType({
     }
 
     const addMemory = async (color: number) => {
-      // check whether the leader has changed
-      const leaders = await redis.zRange(`leaderboard:${postId}`, 0, 0, { by: "rank", reverse: true })
-      const { member = 'Snoo', score = 0 } = leaders?.[0]
-      if (memory.length + 1 <= score) {
-        const value = await redis.get(`memory:${postId}`)
-        if (value && value.length > 0) {
-          setMemory(value.split('').map(Number))
-        }
-        setLeader(member)
-        reset(-1)
-        return
-      }
-
       // send new data to other clients and redis
-      channel.send({ postId, color, leader: userName })
-      redis.setRange(`memory:${postId}`, memory.length, color.toString())
-      redis.zAdd(`leaderboard:${postId}`, { member: userName, score: memory.length + 1 })
-      //console.log(len, color, added, userName, memory.length)
-      setMemory([...memory, color])
-      setLeader(userName)
+      const txn = await redis.watch('memory');
+      await txn.setRange(`memory:${postId}`, memory.length, color.toString())
+      await txn.zAdd(`leaderboard:${postId}`, { member: userName, score: memory.length + 1 })
+      await txn.exec()
+      await realtime.send("events", { postId, memory: [...memory, color], leader: userName })
     }
 
     const play = (color: number) => {
